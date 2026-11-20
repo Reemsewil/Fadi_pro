@@ -129,6 +129,9 @@ textarea:focus,.f input:focus,.search:focus{outline:none;border-color:var(--gold
 .chip{border:1px solid var(--blue-hi);background:linear-gradient(180deg,var(--blue-hi),var(--blue-lo));border-radius:999px;padding:7px 18px;font-size:14.5px;min-height:42px;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 3px 0 var(--blue-edge)}
 .chip[aria-pressed="true"]{background:linear-gradient(180deg,var(--gold-hi),var(--gold));color:var(--accent-ink);border-color:var(--gold-hi);font-weight:600;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 3px 0 var(--gold-edge)}
 .search{min-height:50px}
+.day{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 4px 0;font-family:var(--display)}
+.day b{font-size:15.5px;color:var(--gold);font-weight:600}
+.day span{font-size:13.5px;color:var(--ink2)}
 .list{display:flex;flex-direction:column;gap:12px}
 .item{display:flex;justify-content:space-between;gap:10px;text-align:start;width:100%;background:linear-gradient(165deg,#16264F,var(--surface) 50%,var(--surface2));border:1px solid var(--line);border-radius:16px;padding:13px 15px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 4px 0 var(--blue-edge),0 10px 16px rgba(0,0,0,.5);transition:transform .06s,box-shadow .06s}
@@ -228,6 +231,10 @@ textarea:focus,.f input:focus,.search:focus{outline:none;border-color:var(--gold
   <!-- LOG -->
   <section id="v-log" hidden style="flex-direction:column;gap:12px">
     <input class="search" id="q" type="search" placeholder="دوّر باسم الكرت، المورّد أو الزبون">
+    <div class="fields" style="gap:10px">
+      <div class="f"><label for="dFrom">من تاريخ</label><input id="dFrom" type="date"></div>
+      <div class="f"><label for="dTo">إلى تاريخ</label><input id="dTo" type="date"></div>
+    </div>
     <div class="chips">
       <button class="chip" data-f="all" aria-pressed="true">الكل</button>
       <button class="chip" data-f="sold" aria-pressed="false">مباع</button>
@@ -451,16 +458,29 @@ $('#parseBtn').onclick=()=>{
 };
 
 /* ---------- log ---------- */
+const WD=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+function dayLabel(k){if(!/^\d{4}-\d\d-\d\d$/.test(k))return 'بدون تاريخ';const d=parseYmd(k),t=today();
+  const y=ymd(new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate()-1));
+  return (k===t?'اليوم · ':k===y?'مبارح · ':'')+WD[d.getDay()]+' '+d.getDate()+' '+MONTHS[d.getMonth()]+(d.getFullYear()!==new Date().getFullYear()?' '+d.getFullYear():'')}
 function renderLog(){
-  const q=$('#q').value.trim().toLowerCase();
+  const q=$('#q').value.trim().toLowerCase(),from=$('#dFrom').value,to=$('#dTo').value;
+  const dk=i=>i.soldAt||i.boughtAt||'';
   let arr=items.filter(i=>filter==='all'||(filter==='sold')===(i.price!=null));
   if(q)arr=arr.filter(i=>[i.name,i.supplier,i.customer].some(s=>(s||'').toLowerCase().includes(q)));
-  arr.sort((a,b)=>(b.soldAt||b.boughtAt||'').localeCompare(a.soldAt||a.boughtAt||'')||(b.createdAt||0)-(a.createdAt||0));
-  $('#list').innerHTML=arr.length?arr.map(i=>{const s=i.price!=null,v=s?profit(i):0;
-    return `<button class="item" data-id="${esc(i.id)}"><span class="a"><span class="n">${esc(i.name||"كرت بدون اسم")}</span><span class="m">من ${esc(i.supplier||'غير محدد')}${s?' ← إلى '+esc(i.customer||'غير محدد'):''}</span><span class="m num">${esc(i.soldAt||i.boughtAt||'')}</span></span>
-    <span class="b">${s?`<span class="pill ${v>=0?'good':'bad'} num">${v>=0?'+':''}${money(v)}</span>`:'<span class="pill stock">بالمخزن</span>'}<span class="m num">${i.cost==null?'؟':money(i.cost)}${s?' → '+money(i.price):''}</span></span></button>`}).join('')
-    :`<div class="empty">${items.length?'ما في نتائج':'السجل فاضي. اضغط ＋ وسجّل أول كرت.'}</div>`;
+  if(from)arr=arr.filter(i=>dk(i)>=from);
+  if(to)arr=arr.filter(i=>dk(i)<=to);
+  arr.sort((a,b)=>dk(b).localeCompare(dk(a))||(b.createdAt||0)-(a.createdAt||0));
+  const row=i=>{const s=i.price!=null,v=s?profit(i):0;
+    return `<button class="item" data-id="${esc(i.id)}"><span class="a"><span class="n">${esc(i.name||"كرت بدون اسم")}</span><span class="m">من ${esc(i.supplier||'غير محدد')}${s?' ← إلى '+esc(i.customer||'غير محدد'):''}</span></span>
+    <span class="b">${s?`<span class="pill ${v>=0?'good':'bad'} num">${v>=0?'+':''}${money(v)}</span>`:'<span class="pill stock">بالمخزن</span>'}<span class="m num">${i.cost==null?'؟':money(i.cost)}${s?' → '+money(i.price):''}</span></span></button>`};
+  let h='',cur=null,grp=[];
+  const flush=()=>{if(cur===null)return;const sold=grp.filter(i=>i.price!=null),p=sold.reduce((a,i)=>a+profit(i),0);
+    h+=`<div class="day"><b>${dayLabel(cur)}</b><span>${grp.length} كرت${sold.length?` · ربح <span class="num ${p>=0?'pos':'neg'}">${money(p)}</span>`:''}</span></div>`+grp.map(row).join('')};
+  for(const i of arr){const k=dk(i);if(k!==cur){flush();cur=k;grp=[]}grp.push(i)}flush();
+  if(arr.length&&(from||to)){const S=arr.filter(i=>i.price!=null);h=`<div class="note" style="background:var(--surface);color:var(--ink2);border-color:var(--line)">${arr.length} كرت بهالفترة · ربح <span class="num">${money(S.reduce((a,i)=>a+profit(i),0))}</span></div>`+h}
+  $('#list').innerHTML=h||`<div class="empty">${items.length?'ما في نتائج':'السجل فاضي. اضغط ＋ وسجّل أول كرت.'}</div>`;
 }
+$('#dFrom').addEventListener('input',renderLog);$('#dTo').addEventListener('input',renderLog);
 $('#q').addEventListener('input',renderLog);
 $$('.chip').forEach(c=>c.onclick=()=>{filter=c.dataset.f;$$('.chip').forEach(x=>x.setAttribute('aria-pressed',x===c));renderLog()});
 $('#list').addEventListener('click',e=>{const b=e.target.closest('.item');if(b)openSheet(b.dataset.id)});
