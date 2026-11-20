@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>دفتر كروت الشاشة</title>
+<meta name="theme-color" content="#04060C">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap">
+<style>:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>
+/* Layout: one phone-width column, three views switched by a fixed bottom bar with a raised gold add button.
+   Look: one committed dark world. Black ground, deep-blue raised panels, gold for money and main actions; depth from bevels and hard bottom edges. */
+:root{
+  color-scheme:dark;
+  --bg:#04060C; --surface:#0F1A36; --surface2:#0A1228; --sunk:#070D1E; --ink:#F4F7FF; --ink2:#C3CFEA; --muted:#8C9DC2; --line:#22356A;
+  --accent:#3F8CFF; --accent-ink:#1B1300; --accent-soft:#12254F;
+  --gold:#F3BC35; --gold-hi:#FFE9A3; --gold-lo:#A9730C; --gold-edge:#6B4704;
+  --blue-hi:#2A4688; --blue-lo:#152650; --blue-edge:#060C1F;
+  --good:#3FD79A; --good-soft:#0C3326; --bad:#FF7B7B; --bad-soft:#3F151A; --warn:#F3BC35; --warn-soft:#33270A;
+  --display:"Readex Pro","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --body:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+  --r:18px;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);background-image:radial-gradient(120% 60% at 50% -10%,#14306E 0%,#081230 38%,var(--bg) 72%);background-attachment:fixed;color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55}
+.app{max-width:680px;margin:0 auto;padding-block:16px 124px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance}
+h1{font-size:23px;font-weight:700;background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,var(--gold-lo));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 0 rgba(0,0,0,.7))}
+h2{font-size:16.5px;font-weight:600}
+.num{direction:ltr;unicode-bidi:isolate;display:inline-block;font-variant-numeric:tabular-nums}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sync{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--muted)}
+.dot.ok{background:var(--good);box-shadow:0 0 8px var(--good)} .dot.warn{background:var(--warn);box-shadow:0 0 8px var(--warn)}
+.note{background:var(--warn-soft);color:var(--gold-hi);border:1px solid var(--gold-lo);border-radius:12px;padding:9px 13px;font-size:13.5px}
+
+.panel{background:linear-gradient(165deg,#16264F 0%,var(--surface) 45%,var(--surface2) 100%);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:13px;min-width:0;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.13),inset 0 -2px 0 rgba(0,0,0,.35),0 5px 0 var(--blue-edge),0 16px 26px rgba(0,0,0,.6)}
+.panel-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.sub{color:var(--muted);font-size:13px}
+
+.monthnav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.monthnav b{font-family:var(--display);font-size:18px}
+.ib{width:46px;height:46px;border-radius:13px;border:1px solid var(--blue-hi);background:linear-gradient(180deg,var(--blue-hi),var(--blue-lo));display:grid;place-items:center;font-size:22px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 4px 0 var(--blue-edge),0 8px 12px rgba(0,0,0,.45);transition:transform .06s,box-shadow .06s}
+.ib:active:not(:disabled){transform:translateY(3px);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 1px 0 var(--blue-edge)}
+.ib:disabled{opacity:.3;cursor:default}
+
+.hero{display:flex;flex-direction:column;gap:2px;align-items:center;text-align:center;padding-block:4px}
+.hero .big{font-family:var(--display);font-size:50px;font-weight:700;line-height:1.15;color:var(--gold);
+  background:linear-gradient(180deg,var(--gold-hi) 10%,var(--gold) 50%,var(--gold-lo) 95%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 2px 0 var(--gold-edge)) drop-shadow(0 8px 14px rgba(243,188,53,.28))}
+.hero .big.neg{background:none;color:var(--bad);filter:drop-shadow(0 2px 0 #5A1218)}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.tile{background:linear-gradient(180deg,var(--sunk),#0B1630);border:1px solid #17264F;border-radius:14px;padding:11px 13px;min-width:0;box-shadow:inset 0 3px 8px rgba(0,0,0,.7),0 1px 0 rgba(255,255,255,.08)}
+.tile .l{font-size:13px;color:var(--ink2)}
+.tile .v{font-family:var(--display);font-size:21px;font-weight:600}
+.tile .s{font-size:12.5px;color:var(--muted)}
+
+.chart{position:relative;direction:ltr;min-width:0;background:var(--sunk);border-radius:12px;padding:6px 4px 2px;box-shadow:inset 0 3px 8px rgba(0,0,0,.7),0 1px 0 rgba(255,255,255,.07)}
+.chart svg{display:block;width:100%}
+.chart svg path{filter:drop-shadow(0 0 5px rgba(63,140,255,.55))}
+.chart text{font-family:var(--body);font-size:11px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.chart text.val{fill:var(--gold-hi);font-weight:600}
+.tip{position:absolute;pointer-events:none;background:#000;color:var(--ink);border:1px solid var(--gold);border-radius:9px;padding:6px 10px;font-size:12.5px;line-height:1.4;white-space:nowrap;direction:rtl;z-index:3;transform:translate(-50%,-100%);box-shadow:0 6px 14px rgba(0,0,0,.6)}
+.empty{color:var(--muted);text-align:center;padding:22px 8px;font-size:14.5px}
+
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{font-weight:500;color:var(--muted);font-size:12.5px;text-align:start;padding:4px 0}
+td{padding:9px 0;border-top:1px solid var(--line)}
+td:last-child,th:last-child{text-align:end}
+.pos{color:var(--good)} .neg{color:var(--bad)}
+
+.rank{display:flex;flex-direction:column}
+.rank .row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:15px}
+.rank .row:first-child{border-top:0}
+.rank .row span:first-child{min-width:0;overflow-wrap:anywhere}
+.rank .row>.num{color:var(--gold-hi);font-weight:600}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+
+/* inputs: wells pressed into the panel */
+textarea,.f input,.search{width:100%;border:1px solid #1B2C5C;background:var(--sunk);border-radius:12px;padding:11px 13px;font-size:16px;box-shadow:inset 0 3px 7px rgba(0,0,0,.75),0 1px 0 rgba(255,255,255,.08)}
+textarea{min-height:120px;resize:vertical}
+textarea::placeholder,input::placeholder{color:#6B7CA3}
+textarea:focus,.f input:focus,.search:focus{outline:none;border-color:var(--gold);box-shadow:inset 0 3px 7px rgba(0,0,0,.75),0 0 0 3px rgba(243,188,53,.22)}
+.partial{color:var(--gold-hi);font-size:14px;min-height:1.2em}
+.actions{display:flex;gap:10px;flex-wrap:wrap;padding-bottom:5px}
+
+/* buttons: raised keys with a hard bottom edge that sinks on press */
+.btn{border:1px solid var(--blue-hi);background:linear-gradient(180deg,var(--blue-hi),var(--blue-lo));border-radius:14px;padding:12px 18px;font-weight:600;min-height:52px;font-size:16px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 5px 0 var(--blue-edge),0 10px 16px rgba(0,0,0,.5);transition:transform .06s,box-shadow .06s}
+.btn:active:not(:disabled){transform:translateY(4px);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 1px 0 var(--blue-edge)}
+.btn.pri{border-color:var(--gold-hi);background:linear-gradient(180deg,var(--gold-hi) 0%,var(--gold) 45%,#D79A1B 100%);color:var(--accent-ink);font-family:var(--display);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 5px 0 var(--gold-edge),0 12px 20px rgba(243,188,53,.22)}
+.btn.pri:active:not(:disabled){box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 0 var(--gold-edge)}
+.btn.danger{color:var(--bad);border-color:#7A2A30;background:linear-gradient(180deg,#3B161B,#250D11);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 5px 0 #12060A,0 10px 16px rgba(0,0,0,.5)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.grow{flex:1}
+.mic{display:flex;align-items:center;justify-content:center;gap:9px;flex:1}
+.mic.on{background:linear-gradient(180deg,#FF8A8A,#D23B3B);border-color:#FFB0B0;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 5px 0 #6E1419,0 0 22px rgba(255,90,90,.5)}
+.mic .pulse{width:12px;height:12px;border-radius:50%;background:var(--bad);box-shadow:0 0 8px var(--bad)}
+.mic.on .pulse{background:#fff;box-shadow:none;animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.mic.on .pulse{animation:none}.btn,.ib,.fab,.item{transition:none}}
+
+.draft{border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:11px;background:linear-gradient(165deg,#16264F,var(--surface) 45%,var(--surface2));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 5px 0 var(--blue-edge),0 14px 22px rgba(0,0,0,.55)}
+.draft-h{display:flex;justify-content:space-between;align-items:center}
+.draft-h b{font-family:var(--display);font-size:14px;color:var(--gold)}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.f{display:flex;flex-direction:column;gap:5px;min-width:0}
+.f.wide{grid-column:1/-1}
+.f label{font-size:13.5px;color:var(--ink2)}
+.f input{min-height:48px}
+.live{font-size:14.5px;color:var(--ink2)}
+.x{border:0;background:none;color:var(--muted);padding:6px 10px;font-size:14px}
+
+/* log */
+.chips{display:flex;gap:8px;flex-wrap:wrap;padding-bottom:3px}
+.chip{border:1px solid var(--blue-hi);background:linear-gradient(180deg,var(--blue-hi),var(--blue-lo));border-radius:999px;padding:7px 18px;font-size:14.5px;min-height:42px;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 3px 0 var(--blue-edge)}
+.chip[aria-pressed="true"]{background:linear-gradient(180deg,var(--gold-hi),var(--gold));color:var(--accent-ink);border-color:var(--gold-hi);font-weight:600;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 3px 0 var(--gold-edge)}
+.search{min-height:50px}
+.list{display:flex;flex-direction:column;gap:12px}
+.item{display:flex;justify-content:space-between;gap:10px;text-align:start;width:100%;background:linear-gradient(165deg,#16264F,var(--surface) 50%,var(--surface2));border:1px solid var(--line);border-radius:16px;padding:13px 15px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 4px 0 var(--blue-edge),0 10px 16px rgba(0,0,0,.5);transition:transform .06s,box-shadow .06s}
+.item:active{transform:translateY(3px);box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 1px 0 var(--blue-edge)}
+.item .a{min-width:0;display:flex;flex-direction:column;gap:2px}
+.item .n{font-weight:600;font-size:16px;overflow-wrap:anywhere}
+.item .m{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.item .b{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:none}
+.pill{border-radius:999px;padding:3px 12px;font-size:13.5px;font-weight:600;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.pill.good{background:var(--good-soft);color:var(--good);border:1px solid #1C6B4D} .pill.bad{background:var(--bad-soft);color:var(--bad);border:1px solid #7A2A30} .pill.stock{background:var(--warn-soft);color:var(--gold);border:1px solid var(--gold-lo)}
+
+/* bottom bar */
+.nav{position:fixed;inset:auto 0 0 0;background:linear-gradient(180deg,#101C3C,#060B1A);border-top:1px solid var(--gold-lo);z-index:20;box-shadow:0 -1px 0 rgba(255,233,163,.25) inset,0 -10px 24px rgba(0,0,0,.7);
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.nav-in{max-width:680px;margin:0 auto;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;height:70px}
+.tab{border:0;background:none;height:100%;color:var(--muted);font-weight:500;font-size:16px;font-family:var(--display)}
+.tab[aria-current="true"]{color:var(--gold);text-shadow:0 0 12px rgba(243,188,53,.5)}
+.fab{width:74px;height:74px;border-radius:50%;border:2px solid var(--gold-hi);background:radial-gradient(circle at 35% 28%,#FFF6CC 0%,var(--gold) 42%,var(--gold-lo) 100%);color:var(--accent-ink);font-size:38px;font-weight:700;line-height:1;transform:translateY(-22px);display:grid;place-items:center;
+  box-shadow:inset 0 -5px 8px rgba(107,71,4,.55),0 6px 0 var(--gold-edge),0 0 0 6px var(--bg),0 16px 26px rgba(243,188,53,.35);transition:transform .06s,box-shadow .06s}
+.fab:active,.fab[aria-current="true"]{transform:translateY(-17px);box-shadow:inset 0 -5px 8px rgba(107,71,4,.55),0 1px 0 var(--gold-edge),0 0 0 6px var(--bg),0 8px 18px rgba(243,188,53,.3)}
+
+/* sheet + toast */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:30;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:linear-gradient(170deg,#16264F,var(--surface) 40%,var(--surface2));border:1px solid var(--line);border-top:2px solid var(--gold);width:100%;max-width:680px;border-radius:22px 22px 0 0;padding:18px;padding-bottom:calc(22px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:13px;max-height:92%;overflow:auto;box-shadow:0 -14px 34px rgba(0,0,0,.8)}
+.toast{position:fixed;bottom:calc(108px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:#000;color:var(--gold-hi);border:1px solid var(--gold);padding:10px 18px;border-radius:999px;font-size:15px;z-index:40;max-width:90%;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,.7)}
+</style>
+</head>
+<body>
+<div class="app" dir="rtl" lang="ar">
+  <div class="top">
+    <h1>دفتر كروت الشاشة</h1>
+    <div class="sync"><span class="dot" id="syncDot"></span><span id="syncTxt">جاري التحميل…</span><button class="x" id="logout" hidden>خروج</button></div>
+  </div>
+  <div class="note" id="note" hidden></div>
+
+  <!-- PROFITS -->
+  <section id="v-dash" style="display:flex;flex-direction:column;gap:14px">
+    <div class="panel">
+      <div class="monthnav">
+        <button class="ib" id="mPrev" aria-label="الشهر السابق">›</button>
+        <b id="mLabel"></b>
+        <button class="ib" id="mNext" aria-label="الشهر التالي">‹</button>
+      </div>
+      <div class="hero">
+        <span class="sub">صافي ربح الشهر</span>
+        <span class="big num" id="mProfit">$0</span>
+        <span class="sub" id="mSub"></span>
+      </div>
+      <div class="tiles">
+        <div class="tile"><div class="l">ربح هالأسبوع</div><div class="v num" id="tWeek">$0</div><div class="s" id="tWeekS"></div></div>
+        <div class="tile"><div class="l">مبيعات الشهر</div><div class="v num" id="tRev">$0</div><div class="s" id="tRevS"></div></div>
+        <div class="tile"><div class="l">رأس مال المباع</div><div class="v num" id="tCost">$0</div><div class="s" id="tCostS"></div></div>
+        <div class="tile"><div class="l">بالمخزن (ما انباع)</div><div class="v num" id="tStock">0</div><div class="s" id="tStockS"></div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h"><h2>الربح يوم بيوم</h2><span class="sub" id="dailySub"></span></div>
+      <div class="chart" id="chDaily"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h"><h2>الربح الأسبوعي</h2><span class="sub">الأسبوع يبدأ السبت</span></div>
+      <div id="weeks"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h"><h2>آخر 6 أشهر</h2><span class="sub">صافي الربح</span></div>
+      <div class="chart" id="chMonths"></div>
+    </div>
+
+    <div class="two">
+      <div class="panel"><div class="panel-h"><h2>من وين جبت</h2><span class="sub">ربح الشهر حسب المورّد</span></div><div class="rank" id="rkSup"></div></div>
+      <div class="panel"><div class="panel-h"><h2>لمين بعت</h2><span class="sub">مبيعات الشهر حسب الزبون</span></div><div class="rank" id="rkCus"></div></div>
+    </div>
+  </section>
+
+  <!-- ADD -->
+  <section id="v-add" hidden style="flex-direction:column;gap:14px">
+    <div class="panel">
+      <div class="panel-h"><h2>احكي أو اكتب</h2></div>
+      <span class="sub" id="voiceHint">قول عدد الكروت، واسم كل كرت، بكم جبته ومن مين، وبكم بعته ولمين. أو عبّي الحقول تحت بإيدك. كل الحقول اختيارية.</span>
+      <textarea id="voiceText" placeholder="مثال: جبت كرتين من أبو علي، RTX 3060 بـ 180 وبعته لسامر بـ 230، و RX 6600 بـ 150 لسا ما انباع"></textarea>
+      <div class="partial" id="partial"></div>
+      <div class="actions">
+        <button class="btn mic" id="micBtn" hidden><span class="pulse"></span><span id="micTxt">سجّل صوت</span></button>
+        <button class="btn pri grow" id="parseBtn">حوّلها لكروت</button>
+      </div>
+    </div>
+    <div id="drafts" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div class="actions">
+      <button class="btn" id="addDraft">＋ كرت يدوي</button>
+      <button class="btn pri grow" id="saveAll">احفظ</button>
+    </div>
+  </section>
+
+  <!-- LOG -->
+  <section id="v-log" hidden style="flex-direction:column;gap:12px">
+    <input class="search" id="q" type="search" placeholder="دوّر باسم الكرت، المورّد أو الزبون">
+    <div class="chips">
+      <button class="chip" data-f="all" aria-pressed="true">الكل</button>
+      <button class="chip" data-f="sold" aria-pressed="false">مباع</button>
+      <button class="chip" data-f="stock" aria-pressed="false">بالمخزن</button>
+    </div>
+    <div class="list" id="list"></div>
+  </section>
+</div>
+
+<nav class="nav" dir="rtl"><div class="nav-in">
+  <button class="tab" data-v="dash" aria-current="true">الأرباح</button>
+  <button class="fab" data-v="add" aria-label="إضافة كروت" aria-current="false">＋</button>
+  <button class="tab" data-v="log" aria-current="false">السجل</button>
+</div></nav>
+
+<div class="scrim" id="scrim" hidden dir="rtl"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast" hidden dir="rtl"></div>
+<div class="scrim" id="auth" hidden dir="rtl" style="align-items:center;padding:16px;background:var(--bg)"><form class="panel" id="authForm" style="width:100%;max-width:420px">
+  <h1>دفتر كروت الشاشة</h1>
+  <span class="sub">سجّل دخول بإيميلك لتنحفظ كروتك على حسابك وتفتحها من أي جهاز.</span>
+  <div class="f"><label for="auEmail">الإيميل</label><input id="auEmail" type="email" autocomplete="email" required dir="ltr"></div>
+  <div class="f"><label for="auPass">كلمة السر</label><input id="auPass" type="password" autocomplete="current-password" minlength="6" required dir="ltr"></div>
+  <div class="live" id="auErr" style="color:var(--gold-hi)"></div>
+  <div class="actions"><button class="btn pri grow" type="submit">دخول</button><button class="btn" id="auNew" type="button">حساب جديد</button></div>
+  <button class="x" id="auReset" type="button">نسيت كلمة السر</button>
+</form></div>
+<datalist id="dlName"></datalist><datalist id="dlSup"></datalist><datalist id="dlCus"></datalist>
+
+<script src="parser.js"></script>
+<script>
+document.documentElement.lang='ar'; document.documentElement.dir='rtl';
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>(n<0?'−':'')+'$'+(Math.round(Math.abs(n)*100)/100).toLocaleString('en-US');
+const short=n=>{const a=Math.abs(n),s=n<0?'−':'';return s+(a>=1000?(Math.round(a/100)/10)+'k':Math.round(a))};
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parseYmd=s=>{const[a,b,c]=String(s).split('-').map(Number);return new Date(a,b-1,c)};
+const today=()=>ymd(new Date());
+const MSHORT=['ك٢','شباط','آذار','نيسان','أيار','حزيران','تموز','آب','أيلول','ت١','ت٢','ك١'];
+const MONTHS=['كانون الثاني','شباط','آذار','نيسان','أيار','حزيران','تموز','آب','أيلول','تشرين الأول','تشرين الثاني','كانون الأول'];
+const toNum=v=>{ if(v===null||v===undefined) return null; const s=String(v).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[٫]/g,'.').replace(/[^\d.\-]/g,''); if(s==='') return null; const n=Number(s); return isFinite(n)?n:null };
+const weekStart=d=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+1)%7));return x};
+
+/* ---------- state ---------- */
+let items=[], db=null, mode='loading', slow=false, view='dash', filter='all';
+let month=new Date(); month=new Date(month.getFullYear(),month.getMonth(),1);
+let drafts=[blank()], busy=false, cloud=null, failMsg='';
+function blank(){return{name:'',cost:'',price:'',supplier:'',customer:'',date:today()}}
+const LS='gpu-ledger-items';
+function loadLocal(){try{return JSON.parse(localStorage.getItem(LS)||'[]')}catch{return[]}}
+function saveLocal(){try{localStorage.setItem(LS,JSON.stringify(items))}catch{}}
+
+function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2600)}
+function setStatus(){
+  const dot=$('#syncDot'),txt=$('#syncTxt'),note=$('#note');
+  dot.className='dot'+(mode==='db'?' ok':mode==='loading'?'':' warn');
+  txt.textContent=mode==='loading'?'جاري التحميل…':mode==='db'?'محفوظ على حسابك':'على هذا الجهاز فقط';
+  if(failMsg){note.hidden=false;note.textContent=failMsg}
+  else if(mode==='local'){note.hidden=false;note.textContent='التطبيق لسا ما انربط مع Firebase. البيانات محفوظة على هذا الجهاز فقط.'}
+  else note.hidden=true;
+}
+
+/* ---------- storage: Firebase when configured (see fb.js), this device otherwise ---------- */
+window.app={
+  toast,
+  startLocal(){mode='local';failMsg='';items=loadLocal();renderAll()},
+  startCloud(c){cloud=c;mode='db';failMsg='';items=[];renderAll()},
+  cloudItems(arr){items=arr;renderAll()},
+  signedOut(){cloud=null;mode='loading';items=[];renderAll()},
+  fail(m){failMsg=m;setStatus()}
+};
+function clean(it){return{name:it.name,cost:it.cost,price:it.price,supplier:it.supplier||'',customer:it.customer||'',boughtAt:it.boughtAt,soldAt:it.price==null?null:(it.soldAt||it.boughtAt),createdAt:it.createdAt||Date.now()}}
+async function putItem(it){
+  const data=clean(it);
+  if(mode==='db'){cloud.put(it.id,data);return}
+  if(mode!=='local')throw{code:'not_ready'};
+  if(it.id){const i=items.findIndex(x=>x.id===it.id);if(i>=0)items[i]={id:it.id,...data}}
+  else items.push({id:'l'+Date.now()+Math.random().toString(36).slice(2,7),...data});
+  saveLocal(); renderAll();
+}
+async function delItem(id){
+  if(mode==='db'){cloud.del(id);return}
+  items=items.filter(x=>x.id!==id);saveLocal();renderAll();
+}
+const writeErr=e=>toast(e&&e.code==='not_ready'?'سجّل دخول أولاً':'ما انحفظ، جرّب مرة ثانية');
+
+/* ---------- maths ---------- */
+const sold=()=>items.filter(i=>i.price!=null&&i.soldAt);
+const profit=i=>i.price-(i.cost||0);
+function sumBy(arr,key,val){const m=new Map();for(const a of arr){const k=(key(a)||'').trim()||'غير محدد';const o=m.get(k)||{k,n:0,v:0};o.n++;o.v+=val(a);m.set(k,o)}return[...m.values()].sort((a,b)=>b.v-a.v)}
+
+/* ---------- chart ---------- */
+function niceStep(x){if(x<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(x)));const f=x/p;return(f<=1?1:f<=2?2:f<=5?5:10)*p}
+function barChart(host,data,o={}){
+  const W=Math.max(260,host.clientWidth),H=o.h||190,x0=40,padR=6,padT=20,padB=22;
+  const vals=data.map(d=>d.v);let max=Math.max(0,...vals),min=Math.min(0,...vals);
+  if(max===0&&min===0)max=100;
+  const step=niceStep((max-min)/3);max=Math.ceil(max/step)*step;min=Math.floor(min/step)*step;
+  const y=v=>padT+(max-v)/(max-min)*(H-padT-padB);
+  const band=(W-padR-x0)/data.length,bw=Math.min(o.maxBar||22,Math.max(2,band-2));
+  let s=`<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${esc(o.label||'')}">`;
+  for(let v=min;v<=max+step/2;v+=step){const yy=y(v);
+    s+=`<line x1="${x0}" x2="${W-padR}" y1="${yy}" y2="${yy}" stroke="var(--line)" stroke-width="${Math.abs(v)<step/1e6?1.5:1}" ${Math.abs(v)<step/1e6?'':'stroke-dasharray="2 4"'}/><text x="${x0-6}" y="${yy+4}" text-anchor="end">${short(v)}</text>`}
+  data.forEach((d,i)=>{
+    const cx=x0+i*band+band/2,x=cx-bw/2;
+    if(d.v){const y0=y(0),y1=y(d.v),h=Math.max(2,Math.abs(y1-y0)),r=Math.min(4,bw/2,h),up=d.v>0;
+      const p=up?`M${x},${y0}V${y0-h+r}Q${x},${y0-h} ${x+r},${y0-h}H${x+bw-r}Q${x+bw},${y0-h} ${x+bw},${y0-h+r}V${y0}Z`
+               :`M${x},${y0}V${y0+h-r}Q${x},${y0+h} ${x+r},${y0+h}H${x+bw-r}Q${x+bw},${y0+h} ${x+bw},${y0+h-r}V${y0}Z`;
+      s+=`<path d="${p}" fill="var(${up?'--accent':'--bad'})"/>`;
+      if(o.values)s+=`<text class="val" x="${cx}" y="${up?y0-h-5:y0+h+13}" text-anchor="middle">${short(d.v)}</text>`}
+    if(d.x)s+=`<text x="${cx}" y="${H-6}" text-anchor="middle">${esc(d.x)}</text>`;
+    s+=`<rect data-i="${i}" x="${x0+i*band}" y="0" width="${band}" height="${H}" fill="transparent"/>`;
+  });
+  host.innerHTML=s+'</svg><div class="tip" hidden></div>';
+  const tip=host.querySelector('.tip'),svg=host.querySelector('svg');
+  const show=e=>{const i=e.target.dataset&&e.target.dataset.i;if(i===undefined){tip.hidden=true;return}
+    const d=data[i];tip.innerHTML=d.tip;tip.hidden=false;
+    const cx=x0+i*band+band/2,half=tip.offsetWidth/2;
+    tip.style.left=Math.min(W-half-2,Math.max(half+2,cx))+'px';tip.style.top=Math.max(tip.offsetHeight+2,y(Math.max(0,d.v))-8)+'px'};
+  svg.addEventListener('pointermove',show);svg.addEventListener('pointerdown',show);
+  svg.addEventListener('pointerleave',()=>tip.hidden=true);
+}
+
+/* ---------- dashboard ---------- */
+function renderDash(){
+  const y=month.getFullYear(),m=month.getMonth(),days=new Date(y,m+1,0).getDate(),now=new Date();
+  const key=y+'-'+pad(m+1);
+  const isCur=y===now.getFullYear()&&m===now.getMonth();
+  $('#mLabel').textContent=MONTHS[m]+' '+y; $('#mNext').disabled=isCur;
+  const S=sold(), ms=S.filter(i=>i.soldAt.startsWith(key));
+  const p=ms.reduce((a,i)=>a+profit(i),0), rev=ms.reduce((a,i)=>a+i.price,0), cost=ms.reduce((a,i)=>a+(i.cost||0),0);
+  const mp=$('#mProfit');mp.textContent=money(p);mp.className='big num'+(p>0?' pos':p<0?' neg':'');
+  $('#mSub').textContent=ms.length?`من بيع ${ms.length} كرت · هامش ${cost?Math.round(p/cost*100):0}% على رأس المال`:(items.length?'ما في مبيعات بهذا الشهر':'لسا ما في كروت. اضغط ＋ وسجّل أول كرت بصوتك.');
+  const ws=ymd(weekStart(now)), wk=S.filter(i=>i.soldAt>=ws&&i.soldAt<=ymd(now));
+  $('#tWeek').textContent=money(wk.reduce((a,i)=>a+profit(i),0)); $('#tWeekS').textContent=wk.length+' كرت مباع';
+  $('#tRev').textContent=money(rev); $('#tRevS').textContent=ms.length+' كرت';
+  $('#tCost').textContent=money(cost); $('#tCostS').textContent='كلفة كروت هذا الشهر';
+  const st=items.filter(i=>i.price==null); $('#tStock').textContent=st.length+' كرت'; $('#tStockS').innerHTML='رأس مال <span class="num">'+money(st.reduce((a,i)=>a+(i.cost||0),0))+'</span>';
+
+  // daily
+  const daily=Array.from({length:days},(_,d)=>({v:0,n:0,x:(d===0||(d+1)%5===0)?String(d+1):''}));
+  ms.forEach(i=>{const d=Number(i.soldAt.slice(8))-1;if(daily[d]){daily[d].v+=profit(i);daily[d].n++}});
+  daily.forEach((d,i)=>d.tip=`${i+1} ${esc(MONTHS[m])}<br><b class="num">${money(d.v)}</b> · ${d.n} كرت`);
+  $('#dailySub').textContent=ms.length?'':'لا مبيعات';
+  barChart($('#chDaily'),daily,{label:'الربح اليومي',maxBar:14});
+
+  // weeks
+  const wm=new Map();
+  for(let d=1;d<=days;d++){const k=ymd(weekStart(new Date(y,m,d)));const o=wm.get(k)||{a:d,b:d,v:0,n:0};o.b=d;wm.set(k,o)}
+  ms.forEach(i=>{const o=wm.get(ymd(weekStart(parseYmd(i.soldAt))));if(o){o.v+=profit(i);o.n++}});
+  $('#weeks').innerHTML='<table><thead><tr><th>الأسبوع</th><th>كروت</th><th>الربح</th></tr></thead><tbody>'+[...wm.values()].map((o,i)=>
+    `<tr><td>الأسبوع ${i+1} <span class="sub num">${o.a}–${o.b}</span></td><td class="num">${o.n}</td><td><span class="num ${o.v>0?'pos':o.v<0?'neg':''}">${money(o.v)}</span></td></tr>`).join('')+'</tbody></table>';
+
+  // 6 months
+  const six=[];for(let k=5;k>=0;k--){const d=new Date(y,m-k,1),kk=d.getFullYear()+'-'+pad(d.getMonth()+1);const a=S.filter(i=>i.soldAt.startsWith(kk));
+    const v=a.reduce((s,i)=>s+profit(i),0);six.push({v,x:MSHORT[d.getMonth()],tip:`${esc(MONTHS[d.getMonth()])} ${d.getFullYear()}<br><b class="num">${money(v)}</b> · ${a.length} كرت`})}
+  barChart($('#chMonths'),six,{label:'ربح آخر 6 أشهر',maxBar:24,values:true,h:200});
+
+  const rk=(el,rows,f)=>{el.innerHTML=rows.length?rows.slice(0,6).map(r=>`<div class="row"><span>${esc(r.k)} <span class="sub">· ${r.n} كرت</span></span><span class="num ${f&&r.v<0?'neg':''}">${money(r.v)}</span></div>`).join(''):'<div class="empty">بتظهر هون بعد أول بيعة بالشهر</div>'};
+  rk($('#rkSup'),sumBy(ms,i=>i.supplier,profit),true);
+  rk($('#rkCus'),sumBy(ms,i=>i.customer,i=>i.price),false);
+}
+
+/* ---------- fields (shared by drafts and the edit sheet) ---------- */
+function fieldsHtml(p,d){
+  const f=(k,l,v,extra='',wide='')=>`<div class="f ${wide}"><label for="${p}_${k}">${l}</label><input id="${p}_${k}" data-k="${k}" value="${esc(v)}" ${extra}></div>`;
+  return `<div class="fields">`+
+    f('name','اسم الكرت',d.name,'list="dlName" placeholder="RTX 4070 Super 12GB" autocomplete="off"','wide')+
+    f('cost','جبته بكم (رأس المال)',d.cost,'inputmode="decimal" placeholder="0"')+
+    f('price','بعته بكم',d.price,'inputmode="decimal" placeholder="فاضي = لسا بالمخزن"')+
+    f('supplier','من وين جبته',d.supplier,'list="dlSup" autocomplete="off"')+
+    f('customer','لمين بعته',d.customer,'list="dlCus" autocomplete="off"')+
+    f('date','التاريخ',d.date,'type="date"','wide')+
+  `</div><div class="live" data-live></div>`;
+}
+function liveText(d){const c=toNum(d.cost),p=toNum(d.price);if(c==null&&p==null)return'';if(p==null)return'لسا بالمخزن، بينحسب ربحه لما ينباع';const v=p-(c||0);return `الربح: <b class="num ${v>=0?'pos':'neg'}">${money(v)}</b>`}
+function renderDrafts(){
+  $('#drafts').innerHTML=drafts.map((d,i)=>`<div class="draft" data-i="${i}"><div class="draft-h"><b>كرت ${i+1}</b>${drafts.length>1?`<button class="x" data-rm="${i}">حذف</button>`:''}</div>${fieldsHtml('d'+i,d)}</div>`).join('');
+  $$('#drafts .draft').forEach((el,i)=>el.querySelector('[data-live]').innerHTML=liveText(drafts[i]));
+  $('#saveAll').textContent=drafts.length>1?`احفظ ${drafts.length} كروت`:'احفظ';
+}
+$('#drafts').addEventListener('input',e=>{const box=e.target.closest('.draft');if(!box)return;const d=drafts[box.dataset.i];d[e.target.dataset.k]=e.target.value;e.target.classList.remove('bad');box.querySelector('[data-live]').innerHTML=liveText(d)});
+$('#drafts').addEventListener('click',e=>{const r=e.target.dataset.rm;if(r!==undefined){drafts.splice(Number(r),1);renderDrafts()}});
+$('#addDraft').onclick=()=>{drafts.push(blank());renderDrafts()};
+function toItem(d){const cost=toNum(d.cost),price=toNum(d.price),date=d.date||today();return{name:d.name.trim(),cost,price,supplier:(d.supplier||'').trim(),customer:(d.customer||'').trim(),boughtAt:d.boughtAt||date,soldAt:price==null?null:date}}
+$('#saveAll').onclick=async()=>{
+  if(busy)return;
+  const live=drafts.map((d,i)=>({d,i})).filter(({d})=>[d.name,d.cost,d.price,d.supplier,d.customer].some(v=>String(v||'').trim()));
+  if(!live.length){toast('عبّي ولو حقل واحد أو سجّل صوت');return}
+  busy=true;$('#saveAll').disabled=true;
+  try{for(const{d}of live)await putItem(toItem(d));
+    toast(live.length>1?`انحفظ ${live.length} كروت`:'انحفظ الكرت');drafts=[blank()];$('#voiceText').value='';renderDrafts();go('dash');
+  }catch(e){writeErr(e)}
+  busy=false;$('#saveAll').disabled=false;
+};
+
+/* ---------- voice: the browser's own speech recognition, then parser.js fills the fields ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,recOn=false;
+if(SR)$('#micBtn').hidden=false;else $('#voiceHint').textContent+=' فيك تضغط مايك الكيبورد وتحكي، بعدين اضغط «حوّلها لكروت».';
+function micUi(on){recOn=on;$('#micBtn').classList.toggle('on',on);$('#micTxt').textContent=on?'عم يسمع… اضغط للإيقاف':'سجّل صوت';if(!on)$('#partial').textContent=''}
+$('#micBtn').onclick=()=>{
+  if(recOn){rec.stop();return}
+  const ta=$('#voiceText'),base=ta.value.trim()?ta.value.trim()+' ':'';
+  rec=new SR();rec.lang='ar-SY';rec.interimResults=true;rec.continuous=!/Android/i.test(navigator.userAgent);
+  rec.onstart=()=>micUi(true);
+  rec.onresult=e=>{let fin='',mid='';for(let i=0;i<e.results.length;i++){const x=e.results[i];if(x.isFinal)fin+=x[0].transcript+' ';else mid+=x[0].transcript}ta.value=base+fin;$('#partial').textContent=mid};
+  rec.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed')toast('اسمح للمايك من إعدادات المتصفح');else if(e.error==='network')toast('التسجيل الصوتي بده إنترنت');else if(e.error!=='no-speech'&&e.error!=='aborted')toast('ما اشتغل التسجيل، جرّب مرة ثانية')};
+  rec.onend=()=>micUi(false);
+  try{rec.start()}catch{micUi(false)}
+};
+$('#parseBtn').onclick=()=>{
+  const text=$('#voiceText').value.trim();
+  if(!text){toast('احكي أو اكتب الكروت أولاً');return}
+  if(recOn)rec.stop();
+  const arr=parseCards(text);
+  if(!arr.length){toast('ما لقيت كروت بالكلام. اذكر اسم الكرت والسعر، أو عبّي الحقول بإيدك');return}
+  drafts=arr.map(o=>({name:o.name,cost:o.cost==null?'':String(o.cost),price:o.price==null?'':String(o.price),supplier:o.supplier,customer:o.customer,date:o.date||today()}));
+  renderDrafts();toast(`طلع ${drafts.length} كرت. راجعهم واضغط احفظ`);
+  $('#drafts').scrollIntoView({behavior:'smooth',block:'start'});
+};
+
+/* ---------- log ---------- */
+function renderLog(){
+  const q=$('#q').value.trim().toLowerCase();
+  let arr=items.filter(i=>filter==='all'||(filter==='sold')===(i.price!=null));
+  if(q)arr=arr.filter(i=>[i.name,i.supplier,i.customer].some(s=>(s||'').toLowerCase().includes(q)));
+  arr.sort((a,b)=>(b.soldAt||b.boughtAt||'').localeCompare(a.soldAt||a.boughtAt||'')||(b.createdAt||0)-(a.createdAt||0));
+  $('#list').innerHTML=arr.length?arr.map(i=>{const s=i.price!=null,v=s?profit(i):0;
+    return `<button class="item" data-id="${esc(i.id)}"><span class="a"><span class="n">${esc(i.name||"كرت بدون اسم")}</span><span class="m">من ${esc(i.supplier||'غير محدد')}${s?' ← إلى '+esc(i.customer||'غير محدد'):''}</span><span class="m num">${esc(i.soldAt||i.boughtAt||'')}</span></span>
+    <span class="b">${s?`<span class="pill ${v>=0?'good':'bad'} num">${v>=0?'+':''}${money(v)}</span>`:'<span class="pill stock">بالمخزن</span>'}<span class="m num">${i.cost==null?'؟':money(i.cost)}${s?' → '+money(i.price):''}</span></span></button>`}).join('')
+    :`<div class="empty">${items.length?'ما في نتائج':'السجل فاضي. اضغط ＋ وسجّل أول كرت.'}</div>`;
+}
+$('#q').addEventListener('input',renderLog);
+$$('.chip').forEach(c=>c.onclick=()=>{filter=c.dataset.f;$$('.chip').forEach(x=>x.setAttribute('aria-pressed',x===c));renderLog()});
+$('#list').addEventListener('click',e=>{const b=e.target.closest('.item');if(b)openSheet(b.dataset.id)});
+
+/* ---------- edit sheet ---------- */
+let edit=null;
+function openSheet(id){
+  const it=items.find(x=>x.id===id);if(!it)return;
+  edit={id,createdAt:it.createdAt,boughtAt:it.boughtAt,name:it.name,cost:it.cost==null?'':String(it.cost),price:it.price==null?'':String(it.price),supplier:it.supplier||'',customer:it.customer||'',date:it.soldAt||(it.price==null?today():it.boughtAt)||today()};
+  $('#sheet').innerHTML=`<div class="panel-h"><h2>${it.price==null?'بيع أو تعديل الكرت':'تعديل الكرت'}</h2><button class="x" id="shClose">إغلاق</button></div>${fieldsHtml('e',edit)}
+  <div class="actions"><button class="btn danger" id="shDel">حذف</button><button class="btn pri grow" id="shSave">احفظ التعديل</button></div>`;
+  $('#sheet [data-live]').innerHTML=liveText(edit);
+  $('#scrim').hidden=false;
+  $('#shClose').onclick=closeSheet;
+  let armed=false;
+  $('#shDel').onclick=async()=>{if(!armed){armed=true;$('#shDel').textContent='أكيد؟ اضغط مرة ثانية';return}
+    try{await delItem(edit.id);toast('انحذف');closeSheet()}catch(e){writeErr(e)}};
+  $('#shSave').onclick=async()=>{
+    const n=toItem(edit);n.id=edit.id;n.createdAt=edit.createdAt;n.boughtAt=n.price==null?(edit.date||edit.boughtAt):(edit.boughtAt||edit.date);
+    try{await putItem(n);toast('انحفظ');closeSheet()}catch(e){writeErr(e)}};
+}
+function closeSheet(){$('#scrim').hidden=true;edit=null}
+$('#sheet').addEventListener('input',e=>{if(!edit||!e.target.dataset.k)return;edit[e.target.dataset.k]=e.target.value;$('#sheet [data-live]').innerHTML=liveText(edit)});
+$('#scrim').addEventListener('click',e=>{if(e.target.id==='scrim')closeSheet()});
+
+/* ---------- shell ---------- */
+function go(v){view=v;['dash','add','log'].forEach(k=>{const el=$('#v-'+k);el.hidden=k!==v;if(k===v)el.style.display='flex'});
+  $$('.nav [data-v]').forEach(b=>b.setAttribute('aria-current',b.dataset.v===v));window.scrollTo(0,0);renderAll()}
+$$('.nav [data-v]').forEach(b=>b.onclick=()=>go(b.dataset.v));
+$('#mPrev').onclick=()=>{month=new Date(month.getFullYear(),month.getMonth()-1,1);renderDash()};
+$('#mNext').onclick=()=>{month=new Date(month.getFullYear(),month.getMonth()+1,1);renderDash()};
+function fillLists(){const u=k=>[...new Set(items.map(i=>(i[k]||'').trim()).filter(Boolean))].slice(0,80).map(v=>`<option value="${esc(v)}">`).join('');
+  $('#dlName').innerHTML=u('name');$('#dlSup').innerHTML=u('supplier');$('#dlCus').innerHTML=u('customer')}
+function renderAll(){setStatus();fillLists();if(view==='dash')renderDash();if(view==='log')renderLog()}
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if(view==='dash')renderDash()},150)});
+renderDrafts();
+renderAll();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+<script type="module" src="fb.js"></script>
+</body>
+</html>
